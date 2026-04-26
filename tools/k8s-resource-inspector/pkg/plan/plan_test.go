@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/analysis"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/output"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/analysis"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/output"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 

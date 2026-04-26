@@ -9,11 +9,11 @@ import (
 	"path"
 	"strings"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/config"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/github"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/gitops"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/output"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/plan"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/config"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/github"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/gitops"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/output"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/plan"
 	"github.com/spf13/cobra"
 )
 

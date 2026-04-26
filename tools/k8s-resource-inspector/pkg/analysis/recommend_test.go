@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/metrics"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/metrics"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/config"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/plan"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/config"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/plan"
 	"github.com/spf13/cobra"
 )
 

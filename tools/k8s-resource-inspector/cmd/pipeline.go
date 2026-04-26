@@ -3,10 +3,10 @@ package cmd
 import (
 	"context"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/argo"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/config"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/inspect"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/output"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/argo"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/config"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/inspect"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/output"
 	"k8s.io/client-go/dynamic"
 )
 

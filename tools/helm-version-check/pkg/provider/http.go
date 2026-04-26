@@ -10,8 +10,8 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/davidacain/platform-lab/pkg/version"
-	"github.com/davidacain/platform-lab/tools/helm-version-check/pkg/config"
+	"github.com/LiveViewTech/platform-lab/pkg/version"
+	"github.com/LiveViewTech/platform-lab/tools/helm-version-check/pkg/config"
 )
 
 // indexFile mirrors the structure of a Helm repo index.yaml.

@@ -16,12 +16,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/dynamic"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/argo"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/config"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/github"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/gitops"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/inspect"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/plan"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/argo"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/config"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/github"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/gitops"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/inspect"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/plan"
 )
 
 const (

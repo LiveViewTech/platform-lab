@@ -5,9 +5,9 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/davidacain/platform-lab/pkg/client"
-	"github.com/davidacain/platform-lab/tools/pod-security-inspector/pkg/output"
-	"github.com/davidacain/platform-lab/tools/pod-security-inspector/pkg/security"
+	"github.com/LiveViewTech/platform-lab/pkg/client"
+	"github.com/LiveViewTech/platform-lab/tools/pod-security-inspector/pkg/output"
+	"github.com/LiveViewTech/platform-lab/tools/pod-security-inspector/pkg/security"
 )
 
 var securityCmd = &cobra.Command{

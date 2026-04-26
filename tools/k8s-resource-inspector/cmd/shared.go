@@ -3,7 +3,7 @@ package cmd
 import (
 	"sort"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/output"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/output"
 )
 
 // sortRows sorts rows into canonical order: AppName → Namespace → PodName → Container.

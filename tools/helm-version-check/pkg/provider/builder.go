@@ -1,8 +1,8 @@
 package provider
 
 import (
-	"github.com/davidacain/platform-lab/pkg/version"
-	"github.com/davidacain/platform-lab/tools/helm-version-check/pkg/config"
+	"github.com/LiveViewTech/platform-lab/pkg/version"
+	"github.com/LiveViewTech/platform-lab/tools/helm-version-check/pkg/config"
 )
 
 // FromConfig builds a slice of RepoProviders from the loaded configuration.

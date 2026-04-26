@@ -7,7 +7,7 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/output"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/output"
 	"gopkg.in/yaml.v3"
 )
 

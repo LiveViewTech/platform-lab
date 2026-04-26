@@ -1,4 +1,4 @@
-module github.com/davidacain/platform-lab
+module github.com/LiveViewTech/platform-lab
 
 go 1.25.0
 

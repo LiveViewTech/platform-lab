@@ -6,7 +6,7 @@ Compares deployed Helm releases in a Kubernetes cluster against the latest versi
 
 ```bash
 # From the repo root
-go install github.com/davidacain/platform-lab/tools/helm-version-check@latest
+go install github.com/LiveViewTech/platform-lab/tools/helm-version-check@latest
 
 # Or build locally
 go build -o hvc ./tools/helm-version-check
