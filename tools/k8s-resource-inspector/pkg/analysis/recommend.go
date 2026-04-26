@@ -5,7 +5,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/metrics"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/metrics"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
@@ -56,6 +56,13 @@ func Recommend(behavior BehaviorClass, confidence, threshold float64, u metrics.
 	case BehaviorRunaway:
 		return recommendRunaway(u, memLim, maxMemMi)
 	case BehaviorSpiky:
+		// If p99 usage is under 25% of request, the workload is clearly over-provisioned
+		// regardless of spike pattern — recommend downsizing.
+		cpuPct := u.CPUP99 * 1000 / float64(cpuReq.MilliValue())
+		memPct := u.MemP99 / float64(memReq.Value())
+		if !cpuReq.IsZero() && !memReq.IsZero() && cpuPct < 0.25 && memPct < 0.25 {
+			return recommendStatic(u, cpuReq, cpuLim, memReq, memLim, minCPUMillis, minMemMi, maxCPUMillis, maxMemMi)
+		}
 		return Recommendation{Hold: true, HoldReason: "SPIKY — monitor before rightsizing"}
 	case BehaviorGrowth:
 		return Recommendation{Hold: true, HoldReason: "GROWTH — still trending"}
@@ -181,15 +188,25 @@ func RecommendHPAValues(u metrics.Usage, cpuReq, memReq resource.Quantity, curre
 		Reason:      reason,
 	}
 
-	switch driver {
-	case "CPU":
+	// Populate both metrics when data supports it. The driver field indicates
+	// the primary scaling signal; both targets are recommended for dual-metric HPAs.
+	var parts []string
+
+	if !cpuReq.IsZero() && u.CPUP99 > 0 {
 		target := recommendCPUTarget(u, cpuReq, currentCPUTarget)
 		rec.TargetCPU = &target
-		rec.Text = fmt.Sprintf("CPU HPA target -> %d%%, minReplicas -> %d", target, minReplicas)
-	case "Memory":
+		parts = append(parts, fmt.Sprintf("CPU target -> %d%%", target))
+	}
+	if !memReq.IsZero() && u.MemP99 > 0 {
 		target := recommendMemTarget(u, memReq, currentMemTarget)
 		rec.TargetMemory = &target
-		rec.Text = fmt.Sprintf("Memory HPA target -> %d%%, minReplicas -> %d", target, minReplicas)
+		parts = append(parts, fmt.Sprintf("Memory target -> %d%%", target))
+	}
+
+	if len(parts) > 0 {
+		rec.Text = fmt.Sprintf("%s, minReplicas -> %d", strings.Join(parts, ", "), minReplicas)
+	} else {
+		rec.Text = fmt.Sprintf("minReplicas -> %d", minReplicas)
 	}
 
 	return rec

@@ -9,10 +9,10 @@ import (
 	"github.com/Masterminds/semver/v3"
 	"github.com/spf13/cobra"
 
-	"github.com/davidacain/platform-lab/pkg/version"
-	"github.com/davidacain/platform-lab/tools/helm-version-check/pkg/config"
-	"github.com/davidacain/platform-lab/tools/helm-version-check/pkg/helm"
-	"github.com/davidacain/platform-lab/tools/helm-version-check/pkg/provider"
+	"github.com/LiveViewTech/platform-lab/pkg/version"
+	"github.com/LiveViewTech/platform-lab/tools/helm-version-check/pkg/config"
+	"github.com/LiveViewTech/platform-lab/tools/helm-version-check/pkg/helm"
+	"github.com/LiveViewTech/platform-lab/tools/helm-version-check/pkg/provider"
 )
 
 // CheckResult is one row of comparison output.

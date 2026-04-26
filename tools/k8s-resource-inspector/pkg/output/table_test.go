@@ -3,8 +3,8 @@ package output
 import (
 	"testing"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/analysis"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/hpa"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/analysis"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/hpa"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 

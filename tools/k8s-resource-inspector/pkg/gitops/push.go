@@ -12,7 +12,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"gopkg.in/yaml.v3"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/plan"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/plan"
 )
 
 // PushValuesFile writes values-resources.yaml on a new branch and force-pushes.

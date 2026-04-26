@@ -11,8 +11,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/config"
-	"github.com/davidacain/platform-lab/tools/kri-operator/controller"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/config"
+	"github.com/LiveViewTech/platform-lab/tools/kri-operator/controller"
 )
 
 func main() {

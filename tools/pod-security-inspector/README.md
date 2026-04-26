@@ -6,7 +6,7 @@ Audits running pods across a Kubernetes cluster for three categories of concern:
 
 ```bash
 # From the repo root
-go install github.com/davidacain/platform-lab/tools/pod-security-inspector@latest
+go install github.com/LiveViewTech/platform-lab/tools/pod-security-inspector@latest
 
 # Or build locally
 go build -o psi ./tools/pod-security-inspector

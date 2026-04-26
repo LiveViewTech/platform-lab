@@ -9,7 +9,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/davidacain/platform-lab
+    repoURL: https://github.com/LiveViewTech/platform-lab
     targetRevision: HEAD
     path: demo-app/chart
     helm:

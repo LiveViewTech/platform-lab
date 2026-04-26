@@ -6,9 +6,9 @@ import (
 	"io"
 	"strings"
 
-	"github.com/davidacain/platform-lab/tools/pod-security-inspector/pkg/mesh"
-	"github.com/davidacain/platform-lab/tools/pod-security-inspector/pkg/netpol"
-	"github.com/davidacain/platform-lab/tools/pod-security-inspector/pkg/security"
+	"github.com/LiveViewTech/platform-lab/tools/pod-security-inspector/pkg/mesh"
+	"github.com/LiveViewTech/platform-lab/tools/pod-security-inspector/pkg/netpol"
+	"github.com/LiveViewTech/platform-lab/tools/pod-security-inspector/pkg/security"
 )
 
 const (

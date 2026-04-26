@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/plan"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/plan"
 )
 
 func TestGenerateValuesFile_single(t *testing.T) {

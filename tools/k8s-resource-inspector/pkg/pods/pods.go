@@ -25,8 +25,10 @@ type Pod struct {
 }
 
 // PodLister can list running pods in a namespace.
+// workloadFilter is optional — when non-empty, only pods whose names match
+// the "{workloadFilter}-*" pattern are returned (scoped at the PromQL level).
 type PodLister interface {
-	ListPods(ctx context.Context, namespace string) ([]Pod, error)
+	ListPods(ctx context.Context, namespace, workloadFilter string) ([]Pod, error)
 }
 
 // PromLister implements PodLister backed by Prometheus kube-state-metrics.
@@ -42,15 +44,21 @@ func NewPromLister(prometheusURL string) (*PromLister, error) {
 	return &PromLister{api: v1.NewAPI(client)}, nil
 }
 
-// ListPods returns all running pods in the namespace with their resource configuration.
-func (p *PromLister) ListPods(ctx context.Context, namespace string) ([]Pod, error) {
+// ListPods returns running pods in the namespace with their resource configuration.
+// When workloadFilter is non-empty, only pods matching "{workloadFilter}-.*" are
+// returned — this scopes the PromQL queries so unrelated pods are never fetched.
+func (p *PromLister) ListPods(ctx context.Context, namespace, workloadFilter string) ([]Pod, error) {
 	now := time.Now()
 
 	type key struct{ namespace, pod, container string }
 	pods := make(map[key]*Pod)
 
-	// Only include pods in Running phase.
-	runningFilter := fmt.Sprintf(`kube_pod_status_phase{namespace=%q,phase="Running"} == 1`, namespace)
+	podSelector := ""
+	if workloadFilter != "" {
+		podSelector = fmt.Sprintf(`,pod=~%q`, workloadFilter+"-.*")
+	}
+
+	runningFilter := fmt.Sprintf(`kube_pod_status_phase{namespace=%q%s,phase="Running"} == 1`, namespace, podSelector)
 
 	queries := []struct {
 		name     string
@@ -72,8 +80,8 @@ func (p *PromLister) ListPods(ctx context.Context, namespace string) ([]Pod, err
 
 	for _, q := range queries {
 		query := fmt.Sprintf(
-			`kube_pod_container_resource_%s{namespace=%q,resource=%q,container!=""} * on(namespace,pod) group_left() (%s)`,
-			q.kind, namespace, q.resource, runningFilter,
+			`kube_pod_container_resource_%s{namespace=%q%s,resource=%q,container!=""} * on(namespace,pod) group_left() (%s)`,
+			q.kind, namespace, podSelector, q.resource, runningFilter,
 		)
 		vec, err := p.queryVector(ctx, query, now)
 		if err != nil {
@@ -113,7 +121,7 @@ func (p *PromLister) ListPods(ctx context.Context, namespace string) ([]Pod, err
 	}
 
 	// Enrich with node name from kube_pod_info.
-	nodeVec, err := p.queryVector(ctx, fmt.Sprintf(`kube_pod_info{namespace=%q}`, namespace), now)
+	nodeVec, err := p.queryVector(ctx, fmt.Sprintf(`kube_pod_info{namespace=%q%s}`, namespace, podSelector), now)
 	if err != nil {
 		return nil, fmt.Errorf("query pod info: %w", err)
 	}
@@ -126,7 +134,7 @@ func (p *PromLister) ListPods(ctx context.Context, namespace string) ([]Pod, err
 	}
 
 	// Resolve workload name: pod → ReplicaSet/StatefulSet/DaemonSet → Deployment.
-	workloadMap, err := p.resolveWorkloadNames(ctx, namespace, now)
+	workloadMap, err := p.resolveWorkloadNames(ctx, namespace, podSelector, now)
 	if err != nil {
 		// Non-fatal — fall back to pod name.
 		workloadMap = map[string]string{}
@@ -150,10 +158,10 @@ func (p *PromLister) ListPods(ctx context.Context, namespace string) ([]Pod, err
 // resolveWorkloadNames returns a map of pod name → workload name (Deployment/StatefulSet/DaemonSet).
 // For Deployment pods it follows pod → ReplicaSet → Deployment.
 // For StatefulSet and DaemonSet pods it uses the owner name directly.
-func (p *PromLister) resolveWorkloadNames(ctx context.Context, namespace string, now time.Time) (map[string]string, error) {
+func (p *PromLister) resolveWorkloadNames(ctx context.Context, namespace, podSelector string, now time.Time) (map[string]string, error) {
 	// pod → immediate owner (RS, SS, DS, etc.)
 	ownerVec, err := p.queryVector(ctx,
-		fmt.Sprintf(`kube_pod_owner{namespace=%q,owner_kind=~"ReplicaSet|StatefulSet|DaemonSet"}`, namespace), now)
+		fmt.Sprintf(`kube_pod_owner{namespace=%q%s,owner_kind=~"ReplicaSet|StatefulSet|DaemonSet"}`, namespace, podSelector), now)
 	if err != nil {
 		return nil, fmt.Errorf("query pod owner: %w", err)
 	}

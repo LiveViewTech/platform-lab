@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/analysis"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/metrics"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/analysis"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/metrics"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -160,7 +160,6 @@ func Validate(h *Info, u metrics.Usage, cpuReq, memReq resource.Quantity, behavi
 			p50Pct := (u.CPUP50 / cpuReqCores) * 100
 			target := float64(*h.CPUTarget)
 
-			// p95 already exceeds target → HPA is perpetually scaling out.
 			if p95Pct > target {
 				findings = append(findings, Finding{"WARN", fmt.Sprintf(
 					"CPU p95 utilization (%.0f%%) exceeds HPA target (%d%%) — HPA may be perpetually scaling",
@@ -168,11 +167,34 @@ func Validate(h *Info, u metrics.Usage, cpuReq, memReq resource.Quantity, behavi
 				)})
 			}
 
-			// p50 well below target → HPA will likely never trigger.
 			if p50Pct > 0 && p50Pct < target*0.3 {
 				findings = append(findings, Finding{"WARN", fmt.Sprintf(
 					"CPU HPA target (%d%%) is far above p50 utilization (%.0f%%) — HPA may never trigger",
 					*h.CPUTarget, p50Pct,
+				)})
+			}
+		}
+	}
+
+	// Memory utilization checks — symmetric with CPU checks above.
+	if h.MemTarget != nil && u.HasData && !memReq.IsZero() {
+		memReqBytes := float64(memReq.Value())
+		if memReqBytes > 0 {
+			p95Pct := (u.MemP95 / memReqBytes) * 100
+			p50Pct := (u.MemP50 / memReqBytes) * 100
+			target := float64(*h.MemTarget)
+
+			if p95Pct > target {
+				findings = append(findings, Finding{"WARN", fmt.Sprintf(
+					"Memory p95 utilization (%.0f%%) exceeds HPA target (%d%%) — HPA may be perpetually scaling",
+					p95Pct, *h.MemTarget,
+				)})
+			}
+
+			if p50Pct > 0 && p50Pct < target*0.3 {
+				findings = append(findings, Finding{"WARN", fmt.Sprintf(
+					"Memory HPA target (%d%%) is far above p50 utilization (%.0f%%) — HPA may never trigger",
+					*h.MemTarget, p50Pct,
 				)})
 			}
 		}
@@ -184,11 +206,17 @@ func Validate(h *Info, u metrics.Usage, cpuReq, memReq resource.Quantity, behavi
 			"minReplicas=1 on SPIKY workload — consider raising to absorb traffic spikes"})
 	}
 
-	// Scaling metric mismatch: CPU-only HPA on a memory-trending workload.
+	// Scaling metric mismatch — only relevant for single-metric HPAs.
 	if h.CPUTarget != nil && h.MemTarget == nil {
 		if behavior == analysis.BehaviorGrowth || behavior == analysis.BehaviorRunaway {
 			findings = append(findings, Finding{"WARN",
 				"CPU-only HPA on a memory-trending workload — consider adding a memory metric"})
+		}
+	}
+	if h.MemTarget != nil && h.CPUTarget == nil {
+		if behavior == analysis.BehaviorSpiky {
+			findings = append(findings, Finding{"WARN",
+				"Memory-only HPA on a CPU-spiky workload — consider adding a CPU metric"})
 		}
 	}
 
@@ -241,22 +269,30 @@ func WontFire(h *Info, u metrics.Usage, cpuReq, memReq resource.Quantity, driver
 		return true
 	}
 
-	// Wrong metric: HPA targets only CPU but workload is memory-driven.
-	if driver == DriverMemory && h.CPUTarget != nil && h.MemTarget == nil {
-		return true
+	// Wrong metric — only flag when HPA has a single metric that doesn't
+	// match the workload's primary driver. Dual-metric HPAs cover both.
+	if h.CPUTarget != nil && h.MemTarget == nil {
+		if driver == DriverMemory {
+			return true
+		}
 	}
-	// Wrong metric: HPA targets only memory but workload is CPU-driven.
-	if driver == DriverCPU && h.MemTarget != nil && h.CPUTarget == nil {
-		return true
+	if h.MemTarget != nil && h.CPUTarget == nil {
+		if driver == DriverCPU {
+			return true
+		}
 	}
 
-	// Behavioural: p99 never crosses the configured target under observed conditions.
+	// Behavioural: p99 never crosses the configured target under observed
+	// conditions. An HPA fires when ANY configured metric exceeds its target,
+	// so it won't fire only when ALL configured metrics are below their targets.
+	allBelowTarget := true
+
 	if h.CPUTarget != nil && !cpuReq.IsZero() {
 		cpuReqCores := float64(cpuReq.MilliValue()) / 1000.0
 		if cpuReqCores > 0 {
 			p99Pct := (u.CPUP99 / cpuReqCores) * 100
-			if p99Pct < float64(*h.CPUTarget) {
-				return true
+			if p99Pct >= float64(*h.CPUTarget) {
+				allBelowTarget = false
 			}
 		}
 	}
@@ -264,13 +300,13 @@ func WontFire(h *Info, u metrics.Usage, cpuReq, memReq resource.Quantity, driver
 		memReqBytes := float64(memReq.Value())
 		if memReqBytes > 0 {
 			p99Pct := (u.MemP99 / memReqBytes) * 100
-			if p99Pct < float64(*h.MemTarget) {
-				return true
+			if p99Pct >= float64(*h.MemTarget) {
+				allBelowTarget = false
 			}
 		}
 	}
 
-	return false
+	return allBelowTarget
 }
 
 // RecommendMaxReplicasForSpike returns the maxReplicas needed so that the HPA

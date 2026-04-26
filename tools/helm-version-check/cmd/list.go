@@ -8,7 +8,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
-	"github.com/davidacain/platform-lab/tools/helm-version-check/pkg/helm"
+	"github.com/LiveViewTech/platform-lab/tools/helm-version-check/pkg/helm"
 )
 
 var listCmd = &cobra.Command{

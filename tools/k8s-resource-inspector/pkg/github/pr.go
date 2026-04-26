@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/plan"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/plan"
 )
 
 // EnsurePR creates a PR for the given branch, or returns the URL of an existing

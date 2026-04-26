@@ -29,6 +29,13 @@ type App struct {
 	Path            string   // spec.source.path — chart directory within the repo
 	ValueFiles      []string // spec.source.helm.valueFiles
 
+	// WorkloadFilter restricts BuildRows to pods whose resolved WorkloadName
+	// matches this value or starts with "{value}-". When empty, all pods in
+	// the namespace are included (the default for ArgoCD-sourced apps that own
+	// their namespace). Set this when evaluating a single workload in a shared
+	// namespace (e.g. an Argo Rollout).
+	WorkloadFilter string
+
 	// Per-app kri annotation overrides.
 	HPAWarningDisabled bool            // kri.io/hpa-warning: "disabled"
 	CPUFloor           resource.Quantity // kri.io/cpu-floor — minimum CPU request/limit kri will recommend

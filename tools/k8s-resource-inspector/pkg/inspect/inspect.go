@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/analysis"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/argo"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/config"
-	gitvals "github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/git"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/hpa"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/metrics"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/output"
-	"github.com/davidacain/platform-lab/tools/k8s-resource-inspector/pkg/pods"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/analysis"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/argo"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/config"
+	gitvals "github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/git"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/hpa"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/metrics"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/output"
+	"github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector/pkg/pods"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/client-go/dynamic"
 )
@@ -47,7 +47,7 @@ func BuildRows(ctx context.Context, cfg *config.Config, dynClient dynamic.Interf
 			listerCache[promURL] = lister
 		}
 
-		podList, err := lister.ListPods(ctx, app.Namespace)
+		podList, err := lister.ListPods(ctx, app.Namespace, app.WorkloadFilter)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "warn: list pods for app %s: %v\n", app.Name, err)
 			continue

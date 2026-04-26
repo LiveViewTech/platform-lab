@@ -5,7 +5,7 @@ Analyzes Kubernetes workload resource utilization by combining ArgoCD Applicatio
 ## Installation
 
 ```bash
-go install github.com/davidacain/platform-lab/tools/k8s-resource-inspector@latest
+go install github.com/LiveViewTech/platform-lab/tools/k8s-resource-inspector@latest
 ```
 
 Or build from source:
