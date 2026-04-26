@@ -258,3 +258,190 @@ func TestRoundUpTo(t *testing.T) {
 		}
 	}
 }
+
+func int32p(v int32) *int32 { return &v }
+
+func TestRecommendHPAValues(t *testing.T) {
+	tests := []struct {
+		name            string
+		usage           metrics.Usage
+		cpuReq          resource.Quantity
+		memReq          resource.Quantity
+		currentCPU      *int32
+		currentMem      *int32
+		currentMin      int32
+		driver          string
+		reason          string
+		wantBothTargets bool   // expect both TargetCPU and TargetMemory non-nil
+		wantCPUOnly     bool   // expect TargetCPU non-nil, TargetMemory nil
+		wantMemOnly     bool   // expect TargetMemory non-nil, TargetCPU nil
+		wantMinReplicas int32
+		wantTextContain string
+	}{
+		{
+			name:   "no data → empty recommendation",
+			usage:  metrics.Usage{HasData: false},
+			cpuReq: mustParse("100m"),
+			memReq: mustParse("128Mi"),
+		},
+		{
+			name: "CPU driver with both requests and data → both targets populated",
+			usage: metrics.Usage{
+				HasData: true,
+				CPUP50:  0.04, CPUP99: 0.06,
+				MemP50:  60 * Mi, MemP99: 80 * Mi,
+			},
+			cpuReq:          mustParse("100m"),
+			memReq:          mustParse("128Mi"),
+			currentCPU:      int32p(70),
+			currentMem:      int32p(80),
+			currentMin:      1,
+			driver:          "CPU",
+			reason:          "Tuning",
+			wantBothTargets: true,
+			wantMinReplicas: 2,
+			wantTextContain: "CPU target",
+		},
+		{
+			name: "Memory driver with both requests and data → both targets populated",
+			usage: metrics.Usage{
+				HasData: true,
+				CPUP50:  0.04, CPUP99: 0.06,
+				MemP50:  60 * Mi, MemP99: 80 * Mi,
+			},
+			cpuReq:          mustParse("100m"),
+			memReq:          mustParse("128Mi"),
+			currentCPU:      int32p(70),
+			currentMem:      int32p(80),
+			currentMin:      2,
+			driver:          "Memory",
+			reason:          "WontFire",
+			wantBothTargets: true,
+			wantMinReplicas: 2,
+			wantTextContain: "Memory target",
+		},
+		{
+			name: "only CPU data available → CPU-only target",
+			usage: metrics.Usage{
+				HasData: true,
+				CPUP50:  0.04, CPUP99: 0.06,
+				MemP99:  0, // no memory data
+			},
+			cpuReq:          mustParse("100m"),
+			memReq:          mustParse("128Mi"),
+			currentCPU:      int32p(70),
+			currentMin:      1,
+			driver:          "CPU",
+			reason:          "Tuning",
+			wantCPUOnly:     true,
+			wantMinReplicas: 2,
+			wantTextContain: "CPU target",
+		},
+		{
+			name: "only memory data available → memory-only target",
+			usage: metrics.Usage{
+				HasData: true,
+				CPUP99:  0, // no CPU data
+				MemP50:  60 * Mi, MemP99: 80 * Mi,
+			},
+			cpuReq:          mustParse("100m"),
+			memReq:          mustParse("128Mi"),
+			currentMem:      int32p(80),
+			currentMin:      3,
+			driver:          "Memory",
+			reason:          "Tuning",
+			wantMemOnly:     true,
+			wantMinReplicas: 3,
+			wantTextContain: "Memory target",
+		},
+		{
+			name: "zero CPU request → only memory target",
+			usage: metrics.Usage{
+				HasData: true,
+				CPUP50:  0.04, CPUP99: 0.06,
+				MemP50:  60 * Mi, MemP99: 80 * Mi,
+			},
+			cpuReq:          resource.Quantity{},
+			memReq:          mustParse("128Mi"),
+			currentMin:      1,
+			driver:          "Memory",
+			reason:          "Tuning",
+			wantMemOnly:     true,
+			wantMinReplicas: 2,
+		},
+		{
+			name: "zero memory request → only CPU target",
+			usage: metrics.Usage{
+				HasData: true,
+				CPUP50:  0.04, CPUP99: 0.06,
+				MemP50:  60 * Mi, MemP99: 80 * Mi,
+			},
+			cpuReq:          mustParse("100m"),
+			memReq:          resource.Quantity{},
+			currentMin:      1,
+			driver:          "CPU",
+			reason:          "Tuning",
+			wantCPUOnly:     true,
+			wantMinReplicas: 2,
+		},
+		{
+			name: "minReplicas=0 treated as 1 then raised to 2",
+			usage: metrics.Usage{
+				HasData: true,
+				CPUP50:  0.04, CPUP99: 0.06,
+			},
+			cpuReq:          mustParse("100m"),
+			memReq:          resource.Quantity{},
+			currentMin:      0,
+			driver:          "CPU",
+			reason:          "Tuning",
+			wantMinReplicas: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := RecommendHPAValues(tt.usage, tt.cpuReq, tt.memReq, tt.currentCPU, tt.currentMem, tt.currentMin, tt.driver, tt.reason)
+
+			if !tt.usage.HasData {
+				if rec.Text != "" {
+					t.Errorf("expected empty rec for no data, got %q", rec.Text)
+				}
+				return
+			}
+
+			if tt.wantMinReplicas != 0 && rec.MinReplicas != tt.wantMinReplicas {
+				t.Errorf("MinReplicas = %d, want %d", rec.MinReplicas, tt.wantMinReplicas)
+			}
+
+			if tt.wantBothTargets {
+				if rec.TargetCPU == nil {
+					t.Error("expected TargetCPU to be set")
+				}
+				if rec.TargetMemory == nil {
+					t.Error("expected TargetMemory to be set")
+				}
+			}
+			if tt.wantCPUOnly {
+				if rec.TargetCPU == nil {
+					t.Error("expected TargetCPU to be set")
+				}
+				if rec.TargetMemory != nil {
+					t.Errorf("expected TargetMemory nil, got %d", *rec.TargetMemory)
+				}
+			}
+			if tt.wantMemOnly {
+				if rec.TargetMemory == nil {
+					t.Error("expected TargetMemory to be set")
+				}
+				if rec.TargetCPU != nil {
+					t.Errorf("expected TargetCPU nil, got %d", *rec.TargetCPU)
+				}
+			}
+
+			if tt.wantTextContain != "" && !strings.Contains(rec.Text, tt.wantTextContain) {
+				t.Errorf("Text %q missing %q", rec.Text, tt.wantTextContain)
+			}
+		})
+	}
+}

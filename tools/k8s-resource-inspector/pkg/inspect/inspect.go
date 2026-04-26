@@ -47,7 +47,7 @@ func BuildRows(ctx context.Context, cfg *config.Config, dynClient dynamic.Interf
 			listerCache[promURL] = lister
 		}
 
-		podList, err := lister.ListPods(ctx, app.Namespace)
+		podList, err := lister.ListPods(ctx, app.Namespace, app.WorkloadFilter)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "warn: list pods for app %s: %v\n", app.Name, err)
 			continue

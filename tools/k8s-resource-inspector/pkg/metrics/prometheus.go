@@ -64,8 +64,7 @@ func NewClient(prometheusURL string) (*Client, error) {
 // window is a Prometheus duration string: "7d", "24h", "1h", etc.
 func (c *Client) UsageMetrics(ctx context.Context, namespace, window string) (map[ContainerKey]Usage, error) {
 	now := time.Now()
-	// Subquery step — 5m is a reasonable granularity for a 30s scrape interval.
-	step := "5m"
+	step := subqueryStep(window)
 
 	type querySpec struct {
 		name  string
@@ -269,6 +268,25 @@ func (c *Client) PressureAt(ctx context.Context, namespace string, podNames []st
 	}
 
 	return result, nil
+}
+
+// subqueryStep picks a step size appropriate for the observation window.
+// Short windows (k6 load tests) need fine granularity; long windows
+// (historical analysis) use coarser steps to keep query cost down.
+func subqueryStep(window string) string {
+	d, err := model.ParseDuration(window)
+	if err != nil {
+		return "5m"
+	}
+	dur := time.Duration(d)
+	switch {
+	case dur <= 5*time.Minute:
+		return "15s"
+	case dur <= time.Hour:
+		return "1m"
+	default:
+		return "5m"
+	}
 }
 
 func (c *Client) queryVector(ctx context.Context, query string, ts time.Time) (model.Vector, error) {

@@ -84,12 +84,14 @@ func (c *Config) MinCPUMillis() int64 {
 	return 10
 }
 
-// MinMemoryMi returns the configured minimum memory in Mi, or 16 if unset.
+// MinMemoryMi returns the configured minimum memory in Mi, or 32 if unset.
+// 32Mi is the practical floor for compiled-language runtimes (Go, Rust) that
+// need headroom for GC, stack growth, and startup allocation.
 func (c *Config) MinMemoryMi() int64 {
 	if c.Minimums.MemoryMi > 0 {
 		return c.Minimums.MemoryMi
 	}
-	return 16
+	return 32
 }
 
 // ArgoNS returns the configured ArgoCD namespace, or "argocd" if unset.
